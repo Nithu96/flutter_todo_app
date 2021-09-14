@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:todo_app/screens/home_screen.dart';
 import 'package:todo_app/screens/login_screen.dart';
 
 Future<void> main() async {
@@ -18,11 +20,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'TODO APP',
       theme: ThemeData(
-
         primarySwatch: Colors.red,
       ),
-      home: LoginScreen(),
+      home: FirebaseAuth.instance.currentUser == null
+          ? LoginScreen()
+          : HomeScreen(),
     );
   }
 }
-

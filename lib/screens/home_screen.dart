@@ -34,8 +34,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Welcome to TODO App"),
+        title: const Text("Welcome to TODO App"),
         centerTitle: true,
+
       ),
       body: Center(
         child: Padding(
@@ -48,24 +49,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 150,
                 child: Image.asset("assets/logo.png", fit: BoxFit.contain),
               ),
-              Text(
+              const Text(
                 "Welcome Back",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               Text("${loggedInUser.firstName} ${loggedInUser.secondName}",
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.black54,
                     fontWeight: FontWeight.w500,
                   )),
               Text("${loggedInUser.email}",
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.black54,
                     fontWeight: FontWeight.w500,
                   )),
-              SizedBox(
+              const SizedBox(
                 height: 16,
               ),
               ElevatedButton(
@@ -79,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: Text('TODO List'),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 15,
               ),
               ElevatedButton(

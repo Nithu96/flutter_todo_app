@@ -1,169 +1,227 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/widgets.dart';
+import 'package:todo_app/screens/home_screen.dart';
+import 'package:todo_app/services/crud_config.dart';
 
 class TodoList extends StatefulWidget {
-  const TodoList({Key? key}) : super(key: key);
+   const TodoList({Key? key}) : super(key: key);
 
   @override
   _TodoListState createState() => _TodoListState();
 }
 
 class _TodoListState extends State<TodoList> {
+  late String cartModel;
+  late String cartDescription;
 
-  bool isComplet = false;
-  TextEditingController todoTitleController = TextEditingController();
+  //QuerySnapshot cars;
+  late Stream<QuerySnapshot> cars;
+
+  crudMethods crudObj = crudMethods();
+
+  void addDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text(
+              'Add TODO Item',
+              style: TextStyle(fontSize: 18, color: Colors.redAccent,
+                  fontWeight: FontWeight.bold),
+            ),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  TextField(
+                    decoration: const InputDecoration(hintText: 'Title'),
+                    onChanged: (value) {
+                      cartModel = value;
+                    },
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  TextField(
+                    decoration: const InputDecoration(hintText: 'Description'),
+                    onChanged: (value) {
+                      cartDescription = value;
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Add'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Map<String, dynamic> cartData = {
+                    'title': cartModel,
+                    'disc': cartDescription
+                  };
+                  crudObj.addData(cartData).then((result) {
+                    dialogTrigger(context);
+                    initState();
+                  }).catchError((e) {
+                    print(e);
+                  });
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  void updateDialog(BuildContext context, selectedDoc, data) async {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text(
+              'Update Data',
+              style: TextStyle(fontSize: 15, color: Colors.redAccent,
+                  fontWeight: FontWeight.bold),
+            ),
+            content: SingleChildScrollView(
+             child: ListBody(
+               children: <Widget>[
+                 TextFormField(
+                   decoration: const InputDecoration(hintText: 'Title'),
+                   initialValue: data['title'],
+                   onChanged: (value) {
+                     cartModel = value;
+                   },
+                 ),
+                 const SizedBox(
+                   height: 5,
+                 ),
+                 TextFormField(
+                   decoration: const InputDecoration(hintText: 'Description'),
+                   initialValue: data['disc'],
+                   onChanged: (value) {
+                     cartDescription = value;
+                   },
+                 )
+               ],
+             ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Update'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Map<String, dynamic> cartData = {
+                    'title': cartModel,
+                    'disc': cartDescription
+                  };
+                  crudObj.updateData(selectedDoc, cartData).then((result) {
+                    dialogTrigger(context);
+                    initState();
+                  }).catchError((e) {
+                    print(e);
+                  });
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  void dialogTrigger(BuildContext context) async {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text(
+              'Cart Adding Note',
+              style: TextStyle(fontSize: 15,color: Colors.blue ),
+            ),
+            content: const Text('Successful..!',
+              style: TextStyle(fontSize: 15,color: Colors.blue ),
+            ),
+
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Alright'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        });
+  }
+
+  bool isLoading = true;
+
+  @override
+  // ignore: must_call_super
+  void initState() {
+    crudObj.getData().then((result) {
+      setState(() {
+        cars = result;
+        isLoading = false;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      // back button in navigator
       appBar: AppBar(
-        backgroundColor: Colors.red,
-        title: Text("TODO List"),
+        title: const Text('TODO List'),
         centerTitle: true,
-        leading: IconButton(
-          icon:Icon(Icons.arrow_back,color:Colors.white),
-          onPressed: (){
-            Navigator.of(context).pop();
-          },
-        ),
-        ),
-        body: Center(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget> [
-              SizedBox(height: 20),
-                ListView.separated(
-                  separatorBuilder: (context, index) => Divider(
-                    color: Colors.redAccent,
-                  ),
-                  shrinkWrap: true,
-                  itemCount: 5,
-                  itemBuilder: (context, index) {
-                    return Dismissible(
-                    key: Key(index.toString()),
-                    background: Container(
-                    padding: EdgeInsets.only(left: 20),
-                    alignment: Alignment.centerLeft,
-                    child: Icon(Icons.delete),
-                    color: Colors.red,
-                    ),
-                    onDismissed: (direction){
-                      print("removed");
-                    },
-                    child: ListTile(
-                        onTap: () {
-                          setState(() {
-                            isComplet = !isComplet;
-                          });
-                        },
-                        leading: Container(
-                          padding: EdgeInsets.all(2),
-                          height: 30,
-                          width: 30,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: isComplet
-                              ? Icon(
-                            Icons.check,
-                            color: Colors.white,
-                          )
-                              : Container(),
-                        ),
-                        title: Text(
-                          "todo title",
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                )
-              ],
-            ),
-          ),
-        ),
-
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        backgroundColor: Theme.of(context).primaryColor,
-        onPressed: () {
-          showDialog(
-            builder: (context) => SimpleDialog(
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 25,
-                vertical: 20,
-              ),
-              backgroundColor: Colors.grey[800],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: Row(
-                children: [
-                  Text(
-                    "Add Todo",
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Spacer(),
-                  IconButton(
-                    icon: Icon(
-                      Icons.cancel,
-                      color: Colors.grey,
-                      size: 30,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                ],
-              ),
-              children: [
-                Divider(),
-                TextFormField(
-                  controller: todoTitleController,
-                  style: TextStyle(
-                    fontSize: 18,
-                    height: 1.5,
-                    color: Colors.white,
-                  ),
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: "eg. exercise",
-                    hintStyle: TextStyle(color: Colors.white70),
-                    border: InputBorder.none,
-                  ),
-                ),
-                SizedBox(height: 20),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  height: 50,
-                  child: FlatButton(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text("Add"),
-                    color: Theme.of(context).primaryColor,
-                    textColor: Colors.white,
-                    onPressed: ()  {
-
-                    },
-                  ),
-                )
-              ],
-            ), context: context,
-          );
-        },
+        // leading: IconButton(
+        //     icon: const Icon(Icons.arrow_back),
+        //     onPressed: () {
+        //       Navigator.push(
+        //         context,
+        //         MaterialPageRoute(builder: (context) => const HomeScreen()),
+        //       );
+        //     }),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              addDialog(context);
+            },
+          )
+        ],
       ),
+      body: _carList(),
     );
+  }
+
+  Widget _carList() {
+    return isLoading
+        ? const Text('Loading, Please wait..')
+        : StreamBuilder<QuerySnapshot>(
+            stream: cars,
+            builder: (context, snapshot) {
+              return snapshot.data == null
+                  ? const Text('Loading, Please wait..')
+                  : ListView.builder(
+                      itemCount: snapshot.data!.docs.length,
+                      padding: const EdgeInsets.all(5.0),
+                      itemBuilder: (context, i) {
+                        return ListTile(
+                          title: Text(snapshot.data!.docs[i]['title']),
+                          subtitle: Text(snapshot.data!.docs[i]['disc']),
+                          onTap: () {
+                            updateDialog(context, snapshot.data!.docs[i].id,
+                                snapshot.data!.docs[i]);
+                          },
+                          onLongPress: () {
+                            crudObj.deleteData(snapshot.data!.docs[i].id);
+                          },
+                        );
+                      });
+            });
   }
 }
